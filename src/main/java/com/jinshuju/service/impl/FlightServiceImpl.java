@@ -44,23 +44,18 @@ public class FlightServiceImpl implements FlightService {
     private FlightInfoDTO filterFlights(CustomerTypeEnum customerTypeEnum, List<FlightInfoDTO> flights) {
         FlightInfoDTO flight = null;
         List<FlightPriceDTO> priceList = new ArrayList<>();
-        List<BigDecimal> prices = new ArrayList<>();
 
         for (FlightInfoDTO flightItem : flights) {
             //根据航班号和客户类型筛选出对应航班的价格
             FlightPriceDTO flightPrice = flightPriceDAO.getFlightPriceByFlightNumAndCustomerTypeEnum(flightItem.getFlightNumber(), customerTypeEnum);
             priceList.add(flightPrice);
-            prices.add(flightPrice.getPrice());
         }
 
-        //对航班的价格升序和时间的降序排序
-        Collections.sort(prices);
-        BigDecimal lowestPrice = prices.get(0);
+        //对航班的价格升序
         priceList.stream()
-                .filter(flightInfoDTO -> flightInfoDTO.getPrice().equals(lowestPrice))
-                .collect(Collectors.toList())
-                .stream()
-                .sorted(Comparator.comparing(FlightPriceDTO::getDateTypeEnum).reversed()).collect(Collectors.toList());
+                .sorted(Comparator.comparing(FlightPriceDTO::getPrice).reversed())
+                .sorted(Comparator.comparing(FlightPriceDTO::getDateTypeEnum).reversed())
+                .collect(Collectors.toList());
 
         String flightNum = priceList.get(0).getFlightNumber();
         for (FlightInfoDTO flightItem : flights) {
