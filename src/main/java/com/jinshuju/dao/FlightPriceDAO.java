@@ -1,6 +1,7 @@
 package com.jinshuju.dao;
 
 import com.jinshuju.dao.model.FlightPriceDTO;
+import com.jinshuju.enums.CustomerTypeEnum;
 
 import java.util.List;
 
@@ -40,5 +41,15 @@ public interface FlightPriceDAO {
      * @return 航班信息DTO
      */
     List<FlightPriceDTO> getFlightPrice(String flightNumber);
+
+
+
+    /**
+     * 根据航班号和客户类型查找航班价格信息
+     *
+     * @param flightNumber
+     * @return 航班信息DTO
+     */
+    FlightPriceDTO getFlightPriceByFlightNumAndCustomerTypeEnum(String flightNumber, CustomerTypeEnum customerTypeEnum);
 
 }
