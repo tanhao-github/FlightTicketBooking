@@ -52,15 +52,4 @@ public interface FlightInfoDAO {
      */
     List<FlightInfoDTO> getFlightInfo(String from, String to);
 
-
-    /**
-     *
-     * @param from 出发城市(必须)
-     * @param to 到达城市(必须)
-     * @param startTime 出发时间
-     * @param returnTime 返程时间
-     * @return
-     */
-    List<FlightInfoDTO> listSpecifyFlights(String from, String to,String startTime,String returnTime);
-
 }

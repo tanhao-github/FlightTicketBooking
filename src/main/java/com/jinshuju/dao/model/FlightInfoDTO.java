@@ -1,5 +1,7 @@
 package com.jinshuju.dao.model;
 
+import java.math.BigDecimal;
+
 /**
  * 航班信息DTO
  *
@@ -26,6 +28,11 @@ public class FlightInfoDTO {
      * 到达城市
      */
     private String to;
+
+    /**
+     * 最终航班价格
+     */
+    private BigDecimal flightPrice;
 
     public FlightInfoDTO(){}
 
@@ -68,6 +75,14 @@ public class FlightInfoDTO {
         this.to = to;
     }
 
+    public BigDecimal getFlightPrice() {
+        return flightPrice;
+    }
+
+    public void setFlightPrice(BigDecimal flightPrice) {
+        this.flightPrice = flightPrice;
+    }
+
     @Override
     public String toString() {
         return "FlightInfoDTO{" +
@@ -75,6 +90,7 @@ public class FlightInfoDTO {
                 ", scheduledTime='" + scheduledTime + '\'' +
                 ", from='" + from + '\'' +
                 ", to='" + to + '\'' +
+                ", flightPrice=" + flightPrice +
                 '}';
     }
 

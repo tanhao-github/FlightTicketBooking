@@ -83,4 +83,17 @@ public class FlightPriceDAOImpl implements FlightPriceDAO {
         return null;
     }
 
+    @Override
+    public FlightPriceDTO getFlightPrice(String flightNumber, CustomerTypeEnum customerTypeEnum, DateTypeEnum dateTypeEnum) {
+        if(null != flightNumber && !flightNumber.trim().isEmpty() && null != customerTypeEnum && null != dateTypeEnum){
+            return flightPriceDTOList.stream()
+                    .filter(flightPriceDTO -> flightPriceDTO.getFlightNumber().equals(flightNumber)
+                            && flightPriceDTO.getCustomerTypeEnum().equals(customerTypeEnum)
+                            && flightPriceDTO.getDateTypeEnum().equals(dateTypeEnum))
+                    .collect(Collectors.toList())
+                    .get(0);
+        }
+        return null;
+    }
+
 }

@@ -1,68 +1,71 @@
 package com.jinshuju.service.impl;
 
 import com.jinshuju.dao.FlightInfoDAO;
-import com.jinshuju.dao.FlightPriceDAO;
+import com.jinshuju.dao.impl.FlightInfoDAOImpl;
 import com.jinshuju.dao.model.FlightInfoDTO;
-import com.jinshuju.dao.model.FlightPriceDTO;
 import com.jinshuju.enums.CustomerTypeEnum;
+import com.jinshuju.service.FlightPriceService;
 import com.jinshuju.service.FlightService;
+import com.jinshuju.strategy.FlightPriceStrategy;
+import com.jinshuju.strategy.FlightStrategyContext;
+import com.jinshuju.utils.CommUtils;
+import com.sun.tools.javac.util.Assert;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * @description
- * @outhor xuhang
- * @create 2020-03-27 15:00
+ * 航班信息服务实现
+ *
+ * @author tanchaowen
  */
 public class FlightServiceImpl implements FlightService {
 
-    private FlightInfoDAO flightInfoDAO;
+    private FlightInfoDAO flightInfoDAO = new FlightInfoDAOImpl();
 
-    private FlightPriceDAO flightPriceDAO;
+    private FlightPriceService flightPriceService = new FlightPriceServiceImpl();
 
     /**
-     * @param customerTypeEnum 客户类型
-     * @param from             始发地
-     * @param to               目的地
-     * @param startTime        航班起飞时间
-     * @param returnTime       航班结束时间
-     * @return
+     * 默认出发城市
      */
+    private final static String DEF_FROM = "西安";
+
+    /**
+     * 默认到达城市
+     */
+    private final static String DEF_TO = "成都";
+
     @Override
-    public FlightInfoDTO filterFlights(CustomerTypeEnum customerTypeEnum, String from, String to, String startTime, String returnTime) {
-        //根据始发地，目的地，起飞时间，回程时间查询出符合条件的航班
-        List<FlightInfoDTO> flights = flightInfoDAO.listSpecifyFlights(from, to, startTime, returnTime);
-        return filterFlights(customerTypeEnum, flights);
+    public List<FlightInfoDTO> getFlights(String from, String to, String travelTime) {
+        //TODO 因为航班是固定每天都有，所以暂时 travelTime 不用
+        List<FlightInfoDTO> flightInfoDTOList = flightInfoDAO.getFlightInfo(from, to);
+        return flightInfoDTOList;
     }
 
-    //过滤航班
-    private FlightInfoDTO filterFlights(CustomerTypeEnum customerTypeEnum, List<FlightInfoDTO> flights) {
-        FlightInfoDTO flight = null;
-        List<FlightPriceDTO> priceList = new ArrayList<>();
+    @Override
+    public List<FlightInfoDTO> getFlightsByDefault(CustomerTypeEnum customerTypeEnum, String startTime, String returnTime) {
+        Assert.checkNonNull(customerTypeEnum,"请输入客户类型");
+        Assert.checkNonNull(startTime,"请输入出发时间");
+        Assert.checkNonNull(returnTime,"请输入返程时间");
 
-        for (FlightInfoDTO flightItem : flights) {
-            //根据航班号和客户类型筛选出对应航班的价格
-            FlightPriceDTO flightPrice = flightPriceDAO.getFlightPriceByFlightNumAndCustomerTypeEnum(flightItem.getFlightNumber(), customerTypeEnum);
-            priceList.add(flightPrice);
-        }
+        List<FlightInfoDTO> result = new ArrayList<>();
 
-        //对航班的价格升序
-        priceList.stream()
-                .sorted(Comparator.comparing(FlightPriceDTO::getPrice).reversed())
-                .sorted(Comparator.comparing(FlightPriceDTO::getDateTypeEnum).reversed())
-                .collect(Collectors.toList());
+        //出发航班
+        List<FlightInfoDTO> departFlightInfoDTOList = getFlights(DEF_FROM, DEF_TO, startTime);
+        //回程航班
+        List<FlightInfoDTO> returnFlightInfoDTOList = getFlights(DEF_TO, DEF_FROM, returnTime);
 
-        String flightNum = priceList.get(0).getFlightNumber();
-        for (FlightInfoDTO flightItem : flights) {
-            if (flightItem.getFlightNumber() == flightNum) {
-                flight = flightItem;
-            }
-        }
-        return flight;
+        //根据航班和客户类型和日期类型得到航班最终价格
+        flightPriceService.getFlightPriceIntoFlightInfo(departFlightInfoDTOList,customerTypeEnum, CommUtils.getDateTypeEnumByDateStr(startTime));
+        flightPriceService.getFlightPriceIntoFlightInfo(returnFlightInfoDTOList,customerTypeEnum, CommUtils.getDateTypeEnumByDateStr(returnTime));
+
+        FlightStrategyContext flightStrategyContext = new FlightStrategyContext();
+        flightStrategyContext.setStrategy(new FlightPriceStrategy());
+        result.add(flightStrategyContext.executeStrategy(departFlightInfoDTOList));
+        result.add(flightStrategyContext.executeStrategy(returnFlightInfoDTOList));
+
+        return result;
     }
+
 }
